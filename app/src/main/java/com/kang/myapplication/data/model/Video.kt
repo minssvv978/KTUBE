@@ -16,7 +16,8 @@ data class Video(
     @Json(name = "author") val author: String,
     @Json(name = "viewCount") val viewCount: String,
     @Json(name = "publishedAt") val publishedAt: String,
-    @Json(name = "language") val language: String
+    @Json(name = "language") val language: String,
+    @Json(name = "isKids") val isKids: Boolean = false
 )
 
 /**

@@ -8,9 +8,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kang.myapplication.LangTubeApplication
 import com.kang.myapplication.data.model.Video
 import com.kang.myapplication.data.remote.VideoApiService
+import com.kang.myapplication.data.repository.LanguageRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 sealed interface PlayerUiState {
@@ -20,7 +22,8 @@ sealed interface PlayerUiState {
 }
 
 class PlayerViewModel(
-    private val videoApiService: VideoApiService
+    private val videoApiService: VideoApiService,
+    private val languageRepository: LanguageRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<PlayerUiState>(PlayerUiState.Loading)
@@ -30,8 +33,9 @@ class PlayerViewModel(
         viewModelScope.launch {
             _uiState.value = PlayerUiState.Loading
             try {
+                val language = languageRepository.selectedLanguage.first()
                 val video = videoApiService.getVideo(videoId)
-                val related = videoApiService.getRelatedVideos(videoId)
+                val related = videoApiService.getRelatedVideos(videoId, language)
                 _uiState.value = PlayerUiState.Success(video, related.videos)
             } catch (e: Exception) {
                 _uiState.value = PlayerUiState.Error(e.message ?: "Unknown error")
@@ -44,7 +48,8 @@ class PlayerViewModel(
             initializer {
                 val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as LangTubeApplication)
                 PlayerViewModel(
-                    videoApiService = application.container.videoApiService
+                    videoApiService = application.container.videoApiService,
+                    languageRepository = application.container.languageRepository
                 )
             }
         }
