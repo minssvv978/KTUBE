@@ -74,17 +74,38 @@ class MockVideoApiService : VideoApiService {
         )
     )
 
+    private fun parseViewCount(viewCount: String): Long {
+        val cleaned = viewCount.replace(" views", "").trim()
+        return when {
+            cleaned.endsWith("M") -> (cleaned.dropLast(1).toDouble() * 1_000_000).toLong()
+            cleaned.endsWith("K") -> (cleaned.dropLast(1).toDouble() * 1_000).toLong()
+            else -> cleaned.toLongOrNull() ?: 0L
+        }
+    }
+
     override suspend fun getVideos(language: String?, query: String?): VideoList {
         delay(1000) // Simulate network delay
-        val filtered = allVideos.filter { video ->
-            (language == null || language.isEmpty() || video.language.equals(language, ignoreCase = true)) &&
-            (query == null || video.title.contains(query, ignoreCase = true))
-        }
+        val filtered = allVideos
+            .filter { video ->
+                (language == null || language.isEmpty() || video.language.equals(language, ignoreCase = true)) &&
+                (query == null || video.title.contains(query, ignoreCase = true) || video.description.contains(query, ignoreCase = true))
+            }
+            .sortedByDescending { parseViewCount(it.viewCount) }
         return VideoList(filtered)
     }
 
     override suspend fun getVideo(id: String): Video {
         delay(500)
         return allVideos.find { it.id == id } ?: throw Exception("Video not found")
+    }
+
+    override suspend fun getRelatedVideos(id: String): VideoList {
+        delay(500)
+        val current = allVideos.find { it.id == id }
+        val related = allVideos
+            .filter { it.id != id && (current == null || it.language == current.language) }
+            .sortedByDescending { parseViewCount(it.viewCount) }
+            .take(5)
+        return VideoList(related)
     }
 }

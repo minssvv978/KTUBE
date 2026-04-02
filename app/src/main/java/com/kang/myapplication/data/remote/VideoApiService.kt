@@ -16,6 +16,9 @@ interface VideoApiService {
     @GET("videos/{id}")
     suspend fun getVideo(@Path("id") id: String): Video
 
+    @GET("videos/{id}/related")
+    suspend fun getRelatedVideos(@Path("id") id: String): VideoList
+
     companion object {
         const val BASE_URL = "https://api.langtube.mock/" // Placeholder URL
     }

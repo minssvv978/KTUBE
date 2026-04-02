@@ -94,7 +94,10 @@ fun LangTubeApp() {
             val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
             PlayerScreen(
                 videoId = videoId,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onVideoClick = { newVideoId ->
+                    navController.navigate(LangTubeDestinations.Player.createRoute(newVideoId))
+                }
             )
         }
     }

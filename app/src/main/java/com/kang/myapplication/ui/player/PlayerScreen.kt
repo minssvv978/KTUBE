@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.kang.myapplication.data.model.Video
+import com.kang.myapplication.ui.home.VideoCard
 import com.kang.myapplication.ui.theme.LangTubeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +36,7 @@ import com.kang.myapplication.ui.theme.LangTubeTheme
 fun PlayerScreen(
     videoId: String,
     onBackClick: () -> Unit,
+    onVideoClick: (String) -> Unit,
     viewModel: PlayerViewModel = viewModel(factory = PlayerViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -64,7 +66,11 @@ fun PlayerScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is PlayerUiState.Success -> {
-                    VideoDetails(video = state.video)
+                    VideoDetails(
+                        video = state.video,
+                        relatedVideos = state.relatedVideos,
+                        onVideoClick = onVideoClick
+                    )
                 }
                 is PlayerUiState.Error -> {
                     Text(
@@ -79,7 +85,7 @@ fun PlayerScreen(
 }
 
 @Composable
-fun VideoDetails(video: Video) {
+fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideoClick: (String) -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -199,6 +205,20 @@ fun VideoDetails(video: Video) {
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+            }
+
+            // Related Videos
+            if (relatedVideos.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                Text(
+                    text = "Related Videos",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                relatedVideos.forEach { related ->
+                    VideoCard(video = related, onClick = { onVideoClick(related.id) })
                 }
             }
         }

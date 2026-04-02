@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 sealed interface PlayerUiState {
     object Loading : PlayerUiState
-    data class Success(val video: Video) : PlayerUiState
+    data class Success(val video: Video, val relatedVideos: List<Video>) : PlayerUiState
     data class Error(val message: String) : PlayerUiState
 }
 
@@ -31,7 +31,8 @@ class PlayerViewModel(
             _uiState.value = PlayerUiState.Loading
             try {
                 val video = videoApiService.getVideo(videoId)
-                _uiState.value = PlayerUiState.Success(video)
+                val related = videoApiService.getRelatedVideos(videoId)
+                _uiState.value = PlayerUiState.Success(video, related.videos)
             } catch (e: Exception) {
                 _uiState.value = PlayerUiState.Error(e.message ?: "Unknown error")
             }
