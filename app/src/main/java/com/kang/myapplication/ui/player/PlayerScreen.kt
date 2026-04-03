@@ -118,9 +118,13 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                         WebView(context).apply {
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            settings.mediaPlaybackRequiresUserGesture = false
+                            settings.allowContentAccess = true
+                            settings.loadWithOverviewMode = true
+                            settings.useWideViewPort = true
                             webChromeClient = WebChromeClient()
                             webViewClient = WebViewClient()
-                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1")
+                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1")
                         }
                     },
                     modifier = Modifier.fillMaxSize()
