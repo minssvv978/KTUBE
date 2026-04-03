@@ -1,6 +1,10 @@
 package com.kang.myapplication.ui.player
 
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.kang.myapplication.data.model.Video
@@ -86,12 +94,14 @@ fun PlayerScreen(
 
 @Composable
 fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideoClick: (String) -> Unit = {}) {
+    var isPlaying by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Mock Video Player Area
+        // Video Player Area
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -99,19 +109,44 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                 .background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = video.thumbnailUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = 0.6f
-            )
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Play",
-                tint = Color.White,
-                modifier = Modifier.size(64.dp)
-            )
+            if (isPlaying) {
+                val videoId = video.videoUrl
+                    .substringAfter("?v=")
+                    .substringBefore("&")
+                AndroidView(
+                    factory = { context ->
+                        WebView(context).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            webChromeClient = WebChromeClient()
+                            webViewClient = WebViewClient()
+                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1")
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                AsyncImage(
+                    model = video.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = 0.6f
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { isPlaying = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
         }
         
         // Video Info
