@@ -1,6 +1,8 @@
 package com.kang.myapplication.ui.player
 
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -113,6 +115,26 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                 val videoId = video.videoUrl
                     .substringAfter("?v=")
                     .substringBefore("&")
+                val embedHtml = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                    * { margin:0; padding:0; }
+                    html, body { width:100%; height:100%; background:#000; }
+                    iframe { width:100%; height:100%; border:none; }
+                    </style>
+                    </head>
+                    <body>
+                    <iframe
+                        src="https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1&enablejsapi=1&rel=0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                    </body>
+                    </html>
+                """.trimIndent()
                 AndroidView(
                     factory = { context ->
                         WebView(context).apply {
@@ -123,9 +145,21 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                             settings.allowContentAccess = true
                             settings.loadWithOverviewMode = true
                             settings.useWideViewPort = true
-                            webChromeClient = WebChromeClient()
+                            @Suppress("DEPRECATION")
+                            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onPermissionRequest(request: PermissionRequest) {
+                                    request.grant(request.resources)
+                                }
+                            }
                             webViewClient = WebViewClient()
-                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1&enablejsapi=1&rel=0")
+                            loadDataWithBaseURL(
+                                "https://www.youtube.com",
+                                embedHtml,
+                                "text/html",
+                                "utf-8",
+                                null
+                            )
                         }
                     },
                     modifier = Modifier.fillMaxSize()
