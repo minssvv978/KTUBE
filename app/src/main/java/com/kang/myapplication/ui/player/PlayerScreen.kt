@@ -116,6 +116,7 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                 AndroidView(
                     factory = { context ->
                         WebView(context).apply {
+                            setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
                             settings.mediaPlaybackRequiresUserGesture = false
@@ -124,7 +125,7 @@ fun VideoDetails(video: Video, relatedVideos: List<Video> = emptyList(), onVideo
                             settings.useWideViewPort = true
                             webChromeClient = WebChromeClient()
                             webViewClient = WebViewClient()
-                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1")
+                            loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1&playsinline=1&enablejsapi=1&rel=0")
                         }
                     },
                     modifier = Modifier.fillMaxSize()
